@@ -1,4 +1,4 @@
-# ops-pilot
+# ops-copilot
 
 A multi-agent operations assistant that reports on the health of a GitHub repository — pull request/issue staleness, deployment status across environments, and CI failure details — via three independent microservices, orchestrated two different ways: a deterministic LangGraph supervisor, and an autonomous local LLM using MCP.
 
@@ -68,7 +68,6 @@ This section exists because most of the actual engineering happened here, not in
 
 **MCP subprocess environment isolation.** `fastmcp.Client()` launches the MCP server as a fresh subprocess that does **not** inherit the parent process's environment by default — meaning a working `PYTHONPATH` in the calling terminal had no effect on the spawned server process, which then failed to import its own internal packages. Fixed by explicitly constructing a `StdioTransport` with `env=dict(os.environ)` to opt in to environment inheritance.
 
-
 ## Observability
 
 All three agents are instrumented with `prometheus-fastapi-instrumentator`, exposing a `/metrics` endpoint automatically for every route (request counts, latency histograms, status codes) with no manual metric-writing. Prometheus scrapes all three every 15s (see `prometheus.yml`).
@@ -117,6 +116,16 @@ python -m pytest tests/ -v
 ## Stack
 
 FastAPI · Pydantic · httpx · LangGraph · FastMCP · Ollama · Prometheus · Docker Compose · pytest/respx
+
+## Known limitations
+
+**Single point-in-time snapshot, not trend data.** This answers "what's happening right now," not "did this get worse since yesterday" — which is usually the more useful question for someone actually on call. There's no persistence between runs; nothing is tracked over time. Prometheus is scraping request/latency metrics about the *tool itself*, but not storing a history of the *repo's* health state run over run.
+
+**GitHub-only.** Only supports GitHub Actions for CI status and GitHub's native Deployments API — no support for other CI providers (CircleCI, Jenkins, GitLab CI), and no outbound integrations (Slack, PagerDuty) to actually alert someone. It's a pull-based reporting tool, not a push-based alerting one.
+
+**Deploy status dedupe (fixed).** An earlier version reported every deployment in a repo's history as a separate "environment" entry, rather than collapsing to only the most recent deployment per environment — meaning an environment that failed once months ago but has since succeeded repeatedly would still show as permanently failing. This was a real correctness bug, not a cosmetic one, since it directly fed the `any_environment_failing` signal that both the LangGraph conditional routing and any human reading the report would rely on. Fixed by deduping to the latest deployment per environment before evaluating status; covered by a regression test that deliberately omits a mock for the older, superseded deployment's status endpoint, so the test fails loudly if the dedupe logic regresses.
+
+**Single-token auth, no rate-limit strategy beyond one `GITHUB_TOKEN`.** This is built as a personal/local tool, not something deployable for a team — there's no per-user auth, no shared rate-limit budgeting across multiple callers, and no handling for what happens if multiple people run this against the same repos simultaneously and collectively exhaust the token's 5000/hr limit.
 
 ## Possible next steps
 

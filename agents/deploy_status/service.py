@@ -72,9 +72,16 @@ async def get_deploy_status(request: DeployStatusRequest) -> DeployStatusReport:
         )
         _raise_with_context(resp)
         deployments = resp.json()
+        seen_environments: set[str] = set()
+        latest_deployments = []
+        for dep in deployments:
+            env_name = dep["environment"]
+            if env_name not in seen_environments:
+                seen_environments.add(env_name)
+                latest_deployments.append(dep)
 
         environments: list[EnvironmentDeployStatus] = []
-        for dep in deployments:
+        for dep in latest_deployments:
             latest_status = await _fetch_latest_status_for_deployment(
                 client, request.owner, request.repo, dep["id"]
             )
