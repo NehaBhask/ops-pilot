@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "repo_health"
+    static_configs:
+      - targets: ["repo-health:8001"]
+
+  - job_name: "deploy_status"
+    static_configs:
+      - targets: ["deploy-status:8002"]
+
+  - job_name: "incident_log"
+    static_configs:
+      - targets: ["incident-log:8003"]

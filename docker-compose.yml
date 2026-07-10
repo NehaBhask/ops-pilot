@@ -1,0 +1,36 @@
+
+services:
+  repo-health:
+    build:
+      context: .
+      dockerfile: agents/repo_health/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+
+  deploy-status:
+    build:
+      context: .
+      dockerfile: agents/deploy_status/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+
+  incident-log:
+    build:
+      context: .
+      dockerfile: agents/incident_log/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+  
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+

@@ -8,7 +8,7 @@ Note: this endpoint is slower than the other two agents — it downloads
 and regex-scans full CI log text across multiple jobs, not just small
 JSON metadata payloads.
 """
-
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI, HTTPException
 
 from .models import IncidentLogReport, IncidentLogRequest
@@ -28,3 +28,5 @@ async def incident_log(request: IncidentLogRequest):
         return await get_incident_log_report(request)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Failed to fetch/parse incident logs: {exc}")
+
+Instrumentator().instrument(app).expose(app)

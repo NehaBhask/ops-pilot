@@ -7,7 +7,7 @@ Run standalone with:
 This is designed to run as its own microservice — the orchestrator/MCP
 layer talks to it over HTTP, not by importing it directly.
 """
-
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI, HTTPException
 
 from .models import RepoHealthReport, RepoHealthRequest
@@ -27,3 +27,5 @@ async def repo_health(request: RepoHealthRequest):
         return await get_repo_health(request)
     except Exception as exc:  # narrow this to httpx.HTTPStatusError etc. as you harden it
         raise HTTPException(status_code=502, detail=f"Failed to fetch repo data: {exc}")
+
+Instrumentator().instrument(app).expose(app)

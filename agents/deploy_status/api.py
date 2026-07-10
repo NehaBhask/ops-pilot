@@ -4,6 +4,7 @@ FastAPI wrapper for the Deploy Status Agent.
 Run standalone with:
     uvicorn agents.deploy_status.api:app --reload --port 8002
 """
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from fastapi import FastAPI, HTTPException
 
@@ -24,3 +25,5 @@ async def deploy_status(request: DeployStatusRequest):
         return await get_deploy_status(request)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Failed to fetch deployment data: {exc}")
+
+Instrumentator().instrument(app).expose(app)
