@@ -1,4 +1,4 @@
-# ops-copilot
+# ops-pilot
 
 A multi-agent operations assistant that reports on the health of a GitHub repository — pull request/issue staleness, deployment status across environments, and CI failure details — via three independent microservices, orchestrated two different ways: a deterministic LangGraph supervisor, and an autonomous local LLM using MCP.
 
